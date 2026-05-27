@@ -43,7 +43,7 @@ export function CartDrawer() {
         >
           <div className="flex items-center gap-2.5">
             <h2
-              className="font-display text-xl italic font-light"
+              className="font-display text-xl font-bold tracking-tight"
               style={{ color: 'var(--ink)' }}
             >
               {t.cart}
@@ -191,7 +191,7 @@ export function CartDrawer() {
                   {t.total}
                 </span>
                 <span
-                  className="font-display text-3xl italic font-light"
+                  className="font-display text-3xl font-bold tracking-tight"
                   style={{ color: 'var(--ink)' }}
                 >
                   €{totalPrice().toFixed(2)}

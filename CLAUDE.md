@@ -8,11 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router), TypeScript
+- **Framework**: Next.js 16 (App Router), TypeScript
 - **Styling**: Tailwind CSS v4, Lucide React
 - **Database / Auth / Storage**: Supabase (PostgreSQL + Supabase Auth + Supabase Storage)
 - **State**: Zustand (carrello + lingua persistiti in localStorage, UI state)
 - **Data Fetching**: React Query (`useInfiniteQuery` per catalogo, Server Components per admin)
+- **Pagamenti**: Stripe (Hosted Checkout — redirect a checkout.stripe.com)
 - **Notifiche**: Telegram Bot API + Resend (email conferma ordine)
 - **i18n**: Sistema custom con traduzioni statiche (Rumeno `ro` + Russo `ru`)
 
@@ -42,7 +43,11 @@ Non usare `.env.local` (sovrascrive entrambi gli ambienti). Su Vercel le variabi
 1. Crea due progetti Supabase separati (dev + prod)
 2. Copia `.env.local.example` → `.env.development.local` (credenziali progetto dev)
 3. Copia `.env.local.example` → `.env.production.local` (credenziali progetto prod)
-4. In entrambi i progetti Supabase: esegui `supabase/migrations/001_initial_schema.sql` nella SQL Editor
+4. In entrambi i progetti Supabase: esegui tutte le migration in ordine nella SQL Editor:
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_place_order_function.sql`
+   - `supabase/migrations/003_product_images_array.sql`
+   - `supabase/migrations/004_sportswear_categories.sql`
 5. Crea il bucket `product-images` su Supabase Storage (visibilità: **pubblico**) + policy pubblica di lettura
 6. Crea l'utente admin via Supabase Auth → Authentication → Users
 
@@ -65,8 +70,8 @@ src/
 │   │   └── upload/route.ts     # POST: upload immagine su Supabase Storage (richiede auth)
 │   └── layout.tsx              # Root layout con <Providers>
 ├── components/
-│   ├── store/                  # Navbar, CartDrawer, ProductCard, ProductDetail
-│   │                           # CatalogClient (infinite scroll), CheckoutClient
+│   ├── store/                  # Navbar, CartDrawer, AnnouncementBar, ProductCard, ProductDetail
+│   │                           # HeroClient, CatalogClient (infinite scroll), CheckoutClient
 │   ├── admin/                  # AdminSidebar, AdminLoginForm, ProductForm
 │   │                           # ProductsTable, OrdersTable
 │   ├── T.tsx                   # Componente inline per testi tradotti (wrappa useT)
@@ -104,11 +109,16 @@ Stato **solo locale**: Zustand + `persist` middleware → localStorage (chiave: 
 ### Chiave univoca item carrello
 `${product.id}__${size ?? 'none'}__${color ?? 'none'}` — permette lo stesso prodotto con taglia/colore diversi come righe separate.
 
-### Flusso ordine
-1. `CheckoutClient` → `POST /api/orders` con `{ ...formData, items }`
-2. Route handler: chiama RPC `place_order` (atomic insert `orders` + `order_items` + decremento stock)
-3. Dopo il salvataggio, in parallelo: `sendOrderNotification()` (Telegram al proprietario) + `sendOrderConfirmationEmail()` (email HTML al cliente via Resend)
-4. Gli errori di notifica non bloccano la risposta `201` al client
+### Flusso ordine (con Stripe)
+1. `CheckoutClient` → `POST /api/checkout` con `{ ...formData, items }`
+2. Route handler crea una Stripe Checkout Session (line_items in EUR, metadata con customer + items serializzati come `item_0`, `item_1`, ...)
+3. Client viene redirezionato a `checkout.stripe.com`
+4. Dopo il pagamento: Stripe redireziona a `/checkout/success` (cart svuotato) e invia webhook a `POST /api/webhooks/stripe`
+5. Webhook verifica firma, controlla idempotenza (`stripe_session_id` univoco), chiama RPC `place_order`, aggiorna `orders.stripe_session_id`, invia Telegram + email
+6. Gli errori di notifica non bloccano la risposta `200` al webhook
+
+> **Test locale**: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+> **Carta di test**: `4242 4242 4242 4242`, scadenza futura, CVV qualsiasi
 
 ### Upload immagini prodotto
 `ProductForm` invia ogni file a `POST /api/upload` (Route Handler autenticato). Il route handler usa `createAdminClient()` per bypassare RLS e carica su `product-images/<productId|tmp>/<timestamp>.<ext>`. Il prodotto ha una **galleria** (`images: string[]`); `image_url` è derivato automaticamente come `images[0]` (cover). Max 5 immagini, 5 MB/cad, formati JPG/PNG/WEBP/GIF.
@@ -125,7 +135,7 @@ Tabelle: `categories`, `products` (con `sizes: text[]`, `colors: text[]`, `image
 
 > **Attenzione**: i valori `gender` nel DB sono in italiano (`Uomo`/`Donna`/`Unisex`). La UI li traduce tramite `genderMap` in `lib/i18n/translations.ts`.
 
-Schema completo + RLS policies + stored procedure `place_order` in `supabase/migrations/001_initial_schema.sql`.
+Schema completo + RLS policies in `001_initial_schema.sql`. Stored procedure `place_order` in `002_place_order_function.sql`. Aggiunta colonna `images text[]` in `003_product_images_array.sql`. Categorie sportswear seed in `004_sportswear_categories.sql`.
 
 ## Environment variables
 
@@ -138,9 +148,25 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 RESEND_API_KEY=                 # da resend.com → API Keys
 EMAIL_FROM=                     # es. "Magazinul Meu <noreply@tuodominio.com>"
+STRIPE_SECRET_KEY=              # server-only — sk_test_... (dev) / sk_live_... (prod)
+STRIPE_WEBHOOK_SECRET=          # server-only — whsec_... dal dashboard Stripe → Webhooks
 ```
 
 In sviluppo `EMAIL_FROM` può essere `Magazinul Meu <onboarding@resend.dev>` (invia solo al tuo indirizzo verificato su Resend, senza dominio proprio).
+
+## CSS design tokens
+
+I colori del design system sono definiti in `globals.css` come variabili CSS e usati ovunque via `style={{ color: "var(--ink)" }}` o classi Tailwind:
+
+| Token | Valore | Uso |
+|---|---|---|
+| `--cream` | `#FFFFFF` | Sfondo principale |
+| `--ink` | `#1B1917` | Testo principale, footer bg |
+| `--muted` | `#7A736D` | Testo secondario |
+| `--border` | `#E8E8E8` | Bordi e divisori |
+| `--gold` | `#B8956A` | Accento brand |
+
+Le classi animate `.animate-fade-up`, `.animate-fade-up-delay-1/2`, `.animate-fade-in` sono definite in `globals.css`. `.product-grid .product-card` applica rotazioni CSS nth-child per l'effetto griglia inclinata.
 
 ## i18n
 

@@ -25,7 +25,7 @@ export function ProductCard({ product }: { product: Product }) {
           />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center font-display italic text-lg"
+            className="w-full h-full flex items-center justify-center font-display font-bold text-lg"
             style={{ color: '#C8BFB4' }}
           >
             {t.noImage}

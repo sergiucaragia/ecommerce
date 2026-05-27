@@ -33,7 +33,7 @@ export function AdminSidebar() {
     <aside className="w-56 shrink-0 bg-white border-r flex flex-col">
       <div className="px-4 py-5 border-b">
         <Link href="/admin" className="text-base font-bold text-gray-900">
-          LOOKROOM STORE
+          situl meu
         </Link>
         <p className="text-xs text-gray-400 mt-0.5">{t.adminZone}</p>
       </div>

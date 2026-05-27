@@ -110,7 +110,7 @@ export function ProductDetail({ product }: { product: Product }) {
               </>
             ) : (
               <div
-                className="w-full h-full flex items-center justify-center font-display italic text-xl"
+                className="w-full h-full flex items-center justify-center font-display font-bold text-xl"
                 style={{ color: '#C8BFB4' }}
               >
                 {t.noImage}
@@ -152,7 +152,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
           {/* Nome */}
           <h1
-            className="font-display text-4xl sm:text-5xl font-light italic mt-3 leading-tight"
+            className="font-display text-4xl sm:text-5xl font-extrabold mt-3 leading-tight tracking-tight"
             style={{ color: 'var(--ink)' }}
           >
             {product.name}
@@ -160,7 +160,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
           {/* Prezzo */}
           <p
-            className="font-display text-3xl italic font-light mt-4"
+            className="font-display text-3xl font-bold mt-4 tracking-tight"
             style={{ color: 'var(--gold)' }}
           >
             €{product.price.toFixed(2)}

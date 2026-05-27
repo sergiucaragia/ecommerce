@@ -27,10 +27,10 @@ export default function StoreLayout({
           {/* Brand */}
           <div>
             <p
-              className="font-display text-2xl italic font-light"
+              className="font-display text-2xl font-black tracking-tight"
               style={{ color: "var(--cream)" }}
             >
-              LOOKROOM STORE
+              situl meu
             </p>
             <p
               className="mt-3 text-sm leading-relaxed"

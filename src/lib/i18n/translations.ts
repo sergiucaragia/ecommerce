@@ -1,20 +1,19 @@
 export const translations = {
   ro: {
     // ── Site ──
-    siteTitle: "LOOKROOM STORE",
+    siteTitle: "situl meu",
     siteDescription:
       "Îmbrăcăminte de calitate — răsfoiește catalogul și comandă online.",
     footerRights: "Toate drepturile rezervate.",
-    announcementBar: "Transport gratuit pentru comenzi peste",
-
+    announcementBar: "Transport gratuit în Chișinău",
     // ── Navbar ──
     openCart: "Deschide coșul",
 
     // ── Homepage ──
-    heroTitle: "LOOKROOM STORE",
-    heroSubtitle:
-      "Îmbrăcăminte de calitate. Răsfoiește catalogul și trimite comanda în câteva clicuri.",
+    heroTitle: "situl meu",
+    heroSubtitle: "Performanță și stil. Colecție creată pentru femei active.",
     discoverCollection: "Descoperă colecția",
+    newCollectionLabel: "Colecție nouă",
 
     // ── Catalog ──
     searchPlaceholder: "Caută produse...",
@@ -173,7 +172,7 @@ export const translations = {
 
   ru: {
     // ── Site ──
-    siteTitle: "LOOKROOM STORE",
+    siteTitle: "situl meu",
     siteDescription:
       "Качественная одежда — просматривай каталог и заказывай онлайн.",
     footerRights: "Все права защищены.",
@@ -183,10 +182,10 @@ export const translations = {
     openCart: "Открыть корзину",
 
     // ── Homepage ──
-    heroTitle: "LOOKROOM STORE",
-    heroSubtitle:
-      "Качественная одежда. Просматривай каталог и отправляй заказ за несколько кликов.",
+    heroTitle: "situl meu",
+    heroSubtitle: "Производительность и стиль. Коллекция для активных женщин.",
     discoverCollection: "Открыть коллекцию",
+    newCollectionLabel: "Новая коллекция",
 
     // ── Catalog ──
     searchPlaceholder: "Поиск товаров...",

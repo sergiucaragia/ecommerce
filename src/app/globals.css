@@ -21,7 +21,7 @@ body {
 
 /* ── Typography helpers ─────────────────────────────────── */
 .font-display {
-  font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-display), 'Barlow', system-ui, sans-serif;
 }
 
 /* ── Foto Girate — prodotti ─────────────────────────────── */
